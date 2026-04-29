@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   healthCommand: vi.fn(),
   sessionsCommand: vi.fn(),
   sessionsCleanupCommand: vi.fn(),
+  commitmentsListCommand: vi.fn(),
+  commitmentsDismissCommand: vi.fn(),
   tasksListCommand: vi.fn(),
   tasksAuditCommand: vi.fn(),
   tasksMaintenanceCommand: vi.fn(),
@@ -28,6 +30,8 @@ const statusCommand = mocks.statusCommand;
 const healthCommand = mocks.healthCommand;
 const sessionsCommand = mocks.sessionsCommand;
 const sessionsCleanupCommand = mocks.sessionsCleanupCommand;
+const commitmentsListCommand = mocks.commitmentsListCommand;
+const commitmentsDismissCommand = mocks.commitmentsDismissCommand;
 const tasksListCommand = mocks.tasksListCommand;
 const tasksAuditCommand = mocks.tasksAuditCommand;
 const tasksMaintenanceCommand = mocks.tasksMaintenanceCommand;
@@ -54,6 +58,11 @@ vi.mock("../../commands/sessions.js", () => ({
 
 vi.mock("../../commands/sessions-cleanup.js", () => ({
   sessionsCleanupCommand: mocks.sessionsCleanupCommand,
+}));
+
+vi.mock("../../commands/commitments.js", () => ({
+  commitmentsListCommand: mocks.commitmentsListCommand,
+  commitmentsDismissCommand: mocks.commitmentsDismissCommand,
 }));
 
 vi.mock("../../commands/tasks.js", () => ({
@@ -93,6 +102,8 @@ describe("registerStatusHealthSessionsCommands", () => {
     healthCommand.mockResolvedValue(undefined);
     sessionsCommand.mockResolvedValue(undefined);
     sessionsCleanupCommand.mockResolvedValue(undefined);
+    commitmentsListCommand.mockResolvedValue(undefined);
+    commitmentsDismissCommand.mockResolvedValue(undefined);
     tasksListCommand.mockResolvedValue(undefined);
     tasksAuditCommand.mockResolvedValue(undefined);
     tasksMaintenanceCommand.mockResolvedValue(undefined);
@@ -349,6 +360,31 @@ describe("registerStatusHealthSessionsCommands", () => {
     expect(tasksCancelCommand).toHaveBeenCalledWith(
       expect.objectContaining({
         lookup: "run-123",
+      }),
+      runtime,
+    );
+  });
+
+  it("runs commitments list with filters", async () => {
+    await runCli(["commitments", "--json", "--agent", "work", "--status", "snoozed"]);
+
+    expect(commitmentsListCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        json: true,
+        agent: "work",
+        status: "snoozed",
+        all: false,
+      }),
+      runtime,
+    );
+  });
+
+  it("runs commitments dismiss with id forwarding", async () => {
+    await runCli(["commitments", "dismiss", "cm_1", "cm_2"]);
+
+    expect(commitmentsDismissCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ids: ["cm_1", "cm_2"],
       }),
       runtime,
     );
